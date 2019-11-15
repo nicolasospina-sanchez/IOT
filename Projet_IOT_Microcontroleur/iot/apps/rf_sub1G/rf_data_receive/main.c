@@ -59,6 +59,9 @@ crc  crcTable[256];
 #define SELECTED_FREQ  FREQ_SEL_48MHz
 #define DEVICE_ADDRESS  0x99 /* Addresses 0x00 and 0xFF are broadcast */
 #define NEIGHBOR_ADDRESS 0x37 /* Address of the associated device */
+
+#define CESAR_KEY 12 /* Clé de chiffrement */
+
 /***************************************************************************** */
 /* Pins configuration */
 /* pins blocks are passed to set_pins() for pins configuration.
@@ -92,12 +95,73 @@ const struct pio button = LPC_GPIO_0_12; /* ISP button */
 // Message
 struct message 
 {
-	uint32_t temp;
-	uint16_t hum;
-	uint32_t lum;
+	char* temp;
+	char* hum;
+	char* lum;
 };
 typedef struct message message;
 
+
+/* CRYPTAGE */
+
+
+int caractereValide (char caractere)
+{
+    int etat = 0;
+
+    if( caractere >= 'a' && caractere<= 'z')
+    {
+        etat = 1;// etat 1 = minuscule
+    }
+    else if ( caractere>= 'A' && caractere <= 'Z')
+    {
+        etat = 2;// etat 2 = Majuscule
+    }
+ 
+    return etat; //etat 0 = autres
+}
+
+char* cesar_crypter_int (char* phrase)
+{
+    int i ;
+    
+    for (i = 0; i<strlen(phrase);  i ++)
+    {
+        if (caractereValide(phrase [i]) == 1)
+        {
+            phrase [i] = (((phrase[i]-'a')+CESAR_KEY)%26)+'a';
+        }
+
+        else if (caractereValide (phrase[i]) == 2)
+        {
+            phrase [i] = (((phrase[i]-'A')+CESAR_KEY)%26)+'A';
+        }
+    }
+    return phrase;
+}
+ 
+char* cesar_descrypter_int (char* phrase)
+{
+    uprintf(UART0, "\n\r%s\r\n",phrase);
+    int i ;
+
+    for (i = 0; i<strlen(phrase);  i ++)
+    {
+        if (caractereValide(phrase [i]) == 1)
+        {
+            phrase [i] = (((phrase[i]-'a')-CESAR_KEY)%26)+'a';
+        }
+         
+        else if (caractereValide (phrase[i]) == 2)
+        {
+            phrase [i] = (((phrase[i]-'A')-CESAR_KEY)%26)+'A';
+        }
+    }
+    return phrase;
+}
+
+
+/* FIN CRYPTAGE */
 
 /***************************************************************************** */
 void system_init()
@@ -175,7 +239,7 @@ void handle_rf_rx_data(void)
     uprintf(UART0, "RF: data lenght: %d.\n\r", data[0]);
     uprintf(UART0, "RF: destination: %x.\n\r", data[1]);
     uprintf(UART0, "RF: message in memory is not visible: %c.\n\r", data[2]);
-    uprintf(UART0, "Temp: %d,%d.\n\r", datas.temp/10, datas.temp%10);
+    uprintf(UART0, "Temp: %s.\n\r", cesar_descrypter_int(datas.temp));
 #endif
 
 	switch (data[2]) {

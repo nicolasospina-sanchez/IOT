@@ -61,6 +61,9 @@ char displayOrder[3] = "THL";
 #define SELECTED_FREQ  FREQ_SEL_48MHz
 #define DEVICE_ADDRESS  0x37 /* Addresses 0x00 and 0xFF are broadcast */
 #define NEIGHBOR_ADDRESS 0x99 /* Address of the associated device */
+
+#define CESAR_KEY 12 /* Clé de chiffrement */
+
 /***************************************************************************** */
 /* Pins configuration */
 /* pins blocks are passed to set_pins() for pins configuration.
@@ -116,12 +119,71 @@ const struct pio button = LPC_GPIO_0_12; /* ISP button */
 // Message
 struct message 
 {
-	uint32_t temp;
-	uint16_t hum;
-	uint32_t lum;
+	char* temp;
+	char* hum;
+	char* lum;
 };
 typedef struct message message;
 
+/* CRYPTAGE */
+
+
+int caractereValide (char caractere)
+{
+    int etat = 0;
+     
+    if( caractere >= 'a' && caractere<= 'z')
+    {
+        etat = 1;// etat 1 = minuscule
+    }
+    else if ( caractere>= 'A' && caractere <= 'Z')
+    {
+        etat = 2;// etat 2 = Majuscule
+    }
+ 
+    return etat; //etat 0 = autres
+}
+
+char* cesar_crypter_int (char* phrase)
+{
+    int i ;
+    
+    for (i = 0; i<strlen(phrase);  i ++)
+    {
+        if (caractereValide(phrase [i]) == 1)
+        {
+            phrase [i] = (((phrase[i]-'a')+CESAR_KEY)%26)+'a';
+        }
+         
+        else if (caractereValide (phrase[i]) == 2)
+        {
+            phrase [i] = (((phrase[i]-'A')+CESAR_KEY)%26)+'A';
+        }
+    }
+    return phrase;
+}
+ 
+char* cesar_descrypter_int (char* phrase)
+{
+    int i ;
+     
+    for (i = 0; i<strlen(phrase);  i ++)
+    {
+        if (caractereValide(phrase [i]) == 1)
+        {
+            phrase [i] = (((phrase[i]-'a')-CESAR_KEY)%26)+'a';
+        }
+         
+        else if (caractereValide (phrase[i]) == 2)
+        {
+            phrase [i] = (((phrase[i]-'A')-CESAR_KEY)%26)+'A';
+        }
+    }
+    return phrase;
+}
+
+
+/* FIN CRYPTAGE */
 
 /***************************************************************************** */
 void system_init()
@@ -374,9 +436,9 @@ void send_on_rf(void)
 	uint8_t cc_tx_data[sizeof(message)+4];
 	cc_tx_data[0]=sizeof(message)+3;
 	cc_tx_data[1]=NEIGHBOR_ADDRESS;
-	data.hum=cc_tx_msg.hum;
-	data.lum=cc_tx_msg.lum;
-	data.temp=cc_tx_msg.temp;
+	data.hum=cesar_crypter_int(cc_tx_msg.hum);
+	data.lum=cesar_crypter_int(cc_tx_msg.lum);
+	data.temp=cesar_crypter_int(cc_tx_msg.temp);
 	memcpy(&cc_tx_data[4], &data, sizeof(message));
 
 	/* Send */
@@ -384,11 +446,12 @@ void send_on_rf(void)
 		cc1101_flush_tx_fifo();
 	}
 	
-	int ret = cc1101_send_packet(cc_tx_data, sizeof(message)+4);
+	int ret=cc1101_send_packet(cc_tx_data, sizeof(message)+4);
 
 #ifdef DEBUG
-	uprintf(UART0, "Envoi des données\n");
-	uprintf(UART0, "Tx ret: %d\n\r", ret);
+	uprintf(UART0, "Temp : %s\n\r", data.temp);
+	uprintf(UART0, "Envoi des données\n\r");
+	uprintf(UART0, "Ret : %d\n\r", ret);
 #endif
 }
 
@@ -483,9 +546,9 @@ int main(void)
 			uv_display(UART0, &uv);
 			bme_display(UART0, &pressure, &temp, &humidity);
 			lux_display(UART0, &ir, &lux);
-			cc_tx_msg.temp=temp;
-			cc_tx_msg.hum=humidity;
-			cc_tx_msg.lum=lux;
+			cc_tx_msg.temp=(char*)temp;
+			cc_tx_msg.hum=(char*)&humidity;
+			cc_tx_msg.lum=(char*)lux;
 			update_display = 0;
 			int line;
 			for(int i = 0; i < 3; i++) {
