@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="defaultValue">
+        <item>Choisir...</item>
+        <item>Température</item>
+        <item>Luminosité</item>
+        <item>Humidité</item>
+    </string-array>
+</resources>
