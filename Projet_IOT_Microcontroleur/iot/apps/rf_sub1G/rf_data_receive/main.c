@@ -60,7 +60,7 @@ crc  crcTable[256];
 #define DEVICE_ADDRESS  0x99 /* Addresses 0x00 and 0xFF are broadcast */
 #define NEIGHBOR_ADDRESS 0x37 /* Address of the associated device */
 
-#define CESAR_KEY 12 /* Clé de chiffrement */
+char displayOrder[3] = "TLH";
 
 /***************************************************************************** */
 /* Pins configuration */
@@ -95,73 +95,11 @@ const struct pio button = LPC_GPIO_0_12; /* ISP button */
 // Message
 struct message 
 {
-	char* temp;
-	char* hum;
-	char* lum;
+	uint32_t temp;
+	uint16_t hum;
+	uint32_t lum;
 };
 typedef struct message message;
-
-
-/* CRYPTAGE */
-
-
-int caractereValide (char caractere)
-{
-    int etat = 0;
-
-    if( caractere >= 'a' && caractere<= 'z')
-    {
-        etat = 1;// etat 1 = minuscule
-    }
-    else if ( caractere>= 'A' && caractere <= 'Z')
-    {
-        etat = 2;// etat 2 = Majuscule
-    }
- 
-    return etat; //etat 0 = autres
-}
-
-char* cesar_crypter_int (char* phrase)
-{
-    int i ;
-    
-    for (i = 0; i<strlen(phrase);  i ++)
-    {
-        if (caractereValide(phrase [i]) == 1)
-        {
-            phrase [i] = (((phrase[i]-'a')+CESAR_KEY)%26)+'a';
-        }
-
-        else if (caractereValide (phrase[i]) == 2)
-        {
-            phrase [i] = (((phrase[i]-'A')+CESAR_KEY)%26)+'A';
-        }
-    }
-    return phrase;
-}
- 
-char* cesar_descrypter_int (char* phrase)
-{
-    uprintf(UART0, "\n\r%s\r\n",phrase);
-    int i ;
-
-    for (i = 0; i<strlen(phrase);  i ++)
-    {
-        if (caractereValide(phrase [i]) == 1)
-        {
-            phrase [i] = (((phrase[i]-'a')-CESAR_KEY)%26)+'a';
-        }
-         
-        else if (caractereValide (phrase[i]) == 2)
-        {
-            phrase [i] = (((phrase[i]-'A')-CESAR_KEY)%26)+'A';
-        }
-    }
-    return phrase;
-}
-
-
-/* FIN CRYPTAGE */
 
 /***************************************************************************** */
 void system_init()
@@ -239,7 +177,7 @@ void handle_rf_rx_data(void)
     uprintf(UART0, "RF: data lenght: %d.\n\r", data[0]);
     uprintf(UART0, "RF: destination: %x.\n\r", data[1]);
     uprintf(UART0, "RF: message in memory is not visible: %c.\n\r", data[2]);
-    uprintf(UART0, "Temp: %s.\n\r", cesar_descrypter_int(datas.temp));
+    uprintf(UART0, "Display Order: %s.\n\r", data[4]);
 #endif
 
 	switch (data[2]) {
@@ -275,6 +213,16 @@ void activate_chenillard(uint32_t gpio) {
     }
 }
 
+void handle_uart_cmd(uint8_t c){
+	if(cc_ptr > RF_BUFF_LEN){
+		cc_tx_buff[cc_ptr++] = c;
+	} else {
+		cc_ptr = 0;
+	}
+	if((c == '\n') || (c == '\n')){
+		cc_tx = 1;
+	}
+}
 
 /***************************************************************************** */
 /* Luminosity */
@@ -422,14 +370,10 @@ crc crcFast(uint8_t const message[], int nBytes)
 static volatile message cc_tx_msg;
 void send_on_rf(void)
 {
-	message data;
-	uint8_t cc_tx_data[sizeof(message)+4];
-	cc_tx_data[0]=sizeof(message)+3;
+	uint8_t cc_tx_data[5];
+	cc_tx_data[0]=sizeof(displayOrder);
 	cc_tx_data[1]=NEIGHBOR_ADDRESS;
-	data.hum=cc_tx_msg.hum;
-	data.lum=cc_tx_msg.lum;
-	data.temp=cc_tx_msg.temp;
-	memcpy(&cc_tx_data[4], &data, sizeof(message));
+	memcpy(&cc_tx_data[4], &displayOrder, sizeof(displayOrder));
 
 	/* Send */
 	if (cc1101_tx_fifo_state() != 0) {
@@ -438,14 +382,14 @@ void send_on_rf(void)
 
 	cc_tx_data[2]=crcFast(cc_tx_data, sizeof(cc_tx_data));
 	
-	int ret = cc1101_send_packet(cc_tx_data, sizeof(message)+4);
+	int ret = cc1101_send_packet(cc_tx_data, sizeof(displayOrder)+4);
 
 #ifdef DEBUG
 	uprintf(UART0, "Tx ret: %d\n\r", ret);
     uprintf(UART0, "RF: data lenght: %d.\n\r", cc_tx_data[0]);
     uprintf(UART0, "RF: destination: %x.\n\r", cc_tx_data[1]);
     uprintf(UART0, "RF: crc: %d%d.\n\r", cc_tx_data[2], cc_tx_data[3]);
-    uprintf(UART0, "RF: message: %c.\n\r", cc_tx_data[4]);
+    uprintf(UART0, "RF: message: %s.\n\r", cc_tx_data[4]);
 #endif
 }
 
@@ -479,6 +423,7 @@ int main(void)
 	i2c_on(I2C0, I2C_CLK_100KHz, I2C_MASTER);
 	ssp_master_on(0, LPC_SSP_FRAME_SPI, 8, 4*1000*1000); /* bus_num, frame_type, data_width, rate */
 	status_led_config(&status_led_green, &status_led_red);
+	uart_on(UART0, 115200, handle_uart_cmd);
 	
 	/* Sensors config */
 	uprintf(UART0, "Config Sensors\n\r");
@@ -514,8 +459,8 @@ int main(void)
 			msleep(2000);
         }
 
-/*		if (update_display == 1) {
-			uint16_t uv = 0, ir = 0, humidity = 0;
+		if (update_display == 1) {
+			/*uint16_t uv = 0, ir = 0, humidity = 0;
 			uint32_t pressure = 0, temp = 0, lux = 0;
 			
 			 Read the sensors 
@@ -525,11 +470,11 @@ int main(void)
 			cc_tx_msg.temp=temp;
 			cc_tx_msg.hum=humidity;
 			cc_tx_msg.lum=lux;
-			update_display = 0;
+			update_display = 0;*/
 
-			send_on_rf();
+			 send_on_rf();
 
-		}*/
+		}
 
 		/* RF */
 		if (cc_tx == 1) {
@@ -553,8 +498,13 @@ int main(void)
 		}
 		if (check_rx == 1) {
 			check_rx = 0;
-			handle_rf_rx_data();
+			// handle_rf_rx_data();
 		}
+
+		// if(cc_ptr == 3){
+		// 	handle_uart_cmd('\n');
+		// 	cc_ptr = 0;
+		// }
 
 		
 	}
