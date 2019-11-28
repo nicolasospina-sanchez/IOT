@@ -508,7 +508,7 @@ int main(void)
 				uprintf(UART0, "Display update error: %d\n\r", ret);
 			}
 
-			// send_on_rf();
+			send_on_rf();
 
 		}
 
@@ -532,10 +532,10 @@ int main(void)
 				loop = 0;
 			}
 		}
-		if (check_rx == 1) {
-			check_rx = 0;
-			handle_rf_rx_data();
-		}
+		// if (check_rx == 1) {
+		// 	check_rx = 0;
+		// 	handle_rf_rx_data();
+		// }
 
 		
 	}

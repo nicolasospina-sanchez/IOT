@@ -487,6 +487,10 @@ Discarded input sections
  .bss           0x0000000000000000        0x0 objs/extdrv/cc1101.o
  .text.cc1101_reset
                 0x0000000000000000       0x10 objs/extdrv/cc1101.o
+ .text.cc1101_flush_tx_fifo
+                0x0000000000000000       0x1c objs/extdrv/cc1101.o
+ .text.cc1101_enter_tx_mode
+                0x0000000000000000       0x64 objs/extdrv/cc1101.o
  .text.cc1101_read_pkt_status
                 0x0000000000000000       0x10 objs/extdrv/cc1101.o
  .text.cc1101_enter_fstxon_state
@@ -497,8 +501,10 @@ Discarded input sections
                 0x0000000000000000       0x10 objs/extdrv/cc1101.o
  .text.cc1101_send_calibration_request
                 0x0000000000000000       0x10 objs/extdrv/cc1101.o
- .text.cc1101_receive_packet
-                0x0000000000000000       0xcc objs/extdrv/cc1101.o
+ .text.cc1101_tx_fifo_state
+                0x0000000000000000       0x34 objs/extdrv/cc1101.o
+ .text.cc1101_send_packet
+                0x0000000000000000       0x28 objs/extdrv/cc1101.o
  .text.cc1101_set_channel
                 0x0000000000000000       0x28 objs/extdrv/cc1101.o
  .text.cc1101_power_down
@@ -819,8 +825,6 @@ Discarded input sections
  .text          0x0000000000000000        0x0 objs/apps/rf_sub1G/rf_data_receive/main.o
  .data          0x0000000000000000        0x0 objs/apps/rf_sub1G/rf_data_receive/main.o
  .bss           0x0000000000000000        0x0 objs/apps/rf_sub1G/rf_data_receive/main.o
- .text.handle_rf_rx_data
-                0x0000000000000000       0x90 objs/apps/rf_sub1G/rf_data_receive/main.o
  .text.lux_display
                 0x0000000000000000       0x50 objs/apps/rf_sub1G/rf_data_receive/main.o
  .text.bme_display
@@ -828,7 +832,11 @@ Discarded input sections
  .text.uv_display
                 0x0000000000000000       0x34 objs/apps/rf_sub1G/rf_data_receive/main.o
  .text.crcFast  0x0000000000000000       0x24 objs/apps/rf_sub1G/rf_data_receive/main.o
+ .text.send_on_rf
+                0x0000000000000000       0xa4 objs/apps/rf_sub1G/rf_data_receive/main.o
  .text.crcInit  0x0000000000000000       0x44 objs/apps/rf_sub1G/rf_data_receive/main.o
+ .data.displayOrder
+                0x0000000000000000        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
  .bss.cc_tx_msg
                 0x0000000000000000        0xc objs/apps/rf_sub1G/rf_data_receive/main.o
  .rodata.cc1101_gdo2
@@ -896,7 +904,7 @@ LOAD objs/apps/rf_sub1G/rf_data_receive/main.o
                 0x0000000010000fe0                _end_stack = ((_sram_base + _sram_size) - 0x20)
                 0x0000000000000000                . = ORIGIN (flash)
 
-.text           0x0000000000000000     0x27b0
+.text           0x0000000000000000     0x27a0
  FILL mask 0xff
  *(SORT(.vectors))
  .vectors       0x0000000000000000       0xc0 objs/core/bootstrap.o
@@ -1016,261 +1024,253 @@ LOAD objs/apps/rf_sub1G/rf_data_receive/main.o
  .text.cc1101_spi_transfer
                 0x0000000000000c18       0x6c objs/extdrv/cc1101.o
                 0x0000000000000c18                cc1101_spi_transfer
- .text.cc1101_flush_tx_fifo
-                0x0000000000000c84       0x1c objs/extdrv/cc1101.o
-                0x0000000000000c84                cc1101_flush_tx_fifo
  .text.cc1101_flush_rx_fifo
-                0x0000000000000ca0       0x1c objs/extdrv/cc1101.o
-                0x0000000000000ca0                cc1101_flush_rx_fifo
- .text.cc1101_enter_tx_mode
-                0x0000000000000cbc       0x64 objs/extdrv/cc1101.o
+                0x0000000000000c84       0x1c objs/extdrv/cc1101.o
+                0x0000000000000c84                cc1101_flush_rx_fifo
  .text.cc1101_read_status
-                0x0000000000000d20       0x10 objs/extdrv/cc1101.o
-                0x0000000000000d20                cc1101_read_status
+                0x0000000000000ca0       0x10 objs/extdrv/cc1101.o
+                0x0000000000000ca0                cc1101_read_status
  .text.cc1101_enter_rx_mode
-                0x0000000000000d30       0x38 objs/extdrv/cc1101.o
-                0x0000000000000d30                cc1101_enter_rx_mode
+                0x0000000000000cb0       0x38 objs/extdrv/cc1101.o
+                0x0000000000000cb0                cc1101_enter_rx_mode
  .text.cc1101_rx_fifo_state
-                0x0000000000000d68       0x3c objs/extdrv/cc1101.o
-                0x0000000000000d68                cc1101_rx_fifo_state
- .text.cc1101_tx_fifo_state
-                0x0000000000000da4       0x34 objs/extdrv/cc1101.o
-                0x0000000000000da4                cc1101_tx_fifo_state
- .text.cc1101_send_packet
-                0x0000000000000dd8       0x28 objs/extdrv/cc1101.o
-                0x0000000000000dd8                cc1101_send_packet
+                0x0000000000000ce8       0x3c objs/extdrv/cc1101.o
+                0x0000000000000ce8                cc1101_rx_fifo_state
+ .text.cc1101_receive_packet
+                0x0000000000000d24       0xcc objs/extdrv/cc1101.o
+                0x0000000000000d24                cc1101_receive_packet
  .text.cc1101_set_address
-                0x0000000000000e00       0x28 objs/extdrv/cc1101.o
-                0x0000000000000e00                cc1101_set_address
+                0x0000000000000df0       0x28 objs/extdrv/cc1101.o
+                0x0000000000000df0                cc1101_set_address
  .text.cc1101_init
-                0x0000000000000e28       0x4c objs/extdrv/cc1101.o
-                0x0000000000000e28                cc1101_init
+                0x0000000000000e18       0x4c objs/extdrv/cc1101.o
+                0x0000000000000e18                cc1101_init
  .text.cc1101_config
-                0x0000000000000e74       0x50 objs/extdrv/cc1101.o
-                0x0000000000000e74                cc1101_config
+                0x0000000000000e64       0x50 objs/extdrv/cc1101.o
+                0x0000000000000e64                cc1101_config
  .text.cc1101_update_config
-                0x0000000000000ec4       0x48 objs/extdrv/cc1101.o
-                0x0000000000000ec4                cc1101_update_config
+                0x0000000000000eb4       0x48 objs/extdrv/cc1101.o
+                0x0000000000000eb4                cc1101_update_config
  .text.SSP_0_Handler
-                0x0000000000000f0c       0x2c objs/drivers/ssp.o
-                0x0000000000000f0c                SSP_0_Handler
+                0x0000000000000efc       0x2c objs/drivers/ssp.o
+                0x0000000000000efc                SSP_0_Handler
  .text.spi_transfer_single_frame
-                0x0000000000000f38       0x20 objs/drivers/ssp.o
-                0x0000000000000f38                spi_transfer_single_frame
+                0x0000000000000f28       0x20 objs/drivers/ssp.o
+                0x0000000000000f28                spi_transfer_single_frame
  .text.spi_transfer_multiple_frames
-                0x0000000000000f58       0xf0 objs/drivers/ssp.o
-                0x0000000000000f58                spi_transfer_multiple_frames
+                0x0000000000000f48       0xf0 objs/drivers/ssp.o
+                0x0000000000000f48                spi_transfer_multiple_frames
  .text.ssp_clk_on
-                0x0000000000001048       0x78 objs/drivers/ssp.o
-                0x0000000000001048                ssp_clk_on
+                0x0000000000001038       0x78 objs/drivers/ssp.o
+                0x0000000000001038                ssp_clk_on
  .text.ssp_clk_update
-                0x00000000000010c0       0x18 objs/drivers/ssp.o
-                0x00000000000010c0                ssp_clk_update
+                0x00000000000010b0       0x18 objs/drivers/ssp.o
+                0x00000000000010b0                ssp_clk_update
  .text.ssp_master_on
-                0x00000000000010d8       0x88 objs/drivers/ssp.o
-                0x00000000000010d8                ssp_master_on
- .text.gpio_on  0x0000000000001160       0x18 objs/drivers/gpio.o
-                0x0000000000001160                gpio_on
+                0x00000000000010c8       0x88 objs/drivers/ssp.o
+                0x00000000000010c8                ssp_master_on
+ .text.gpio_on  0x0000000000001150       0x18 objs/drivers/gpio.o
+                0x0000000000001150                gpio_on
  .text.config_gpio
-                0x0000000000001178       0x4c objs/drivers/gpio.o
-                0x0000000000001178                config_gpio
+                0x0000000000001168       0x4c objs/drivers/gpio.o
+                0x0000000000001168                config_gpio
  .text.set_gpio_callback
-                0x00000000000011c4      0x118 objs/drivers/gpio.o
-                0x00000000000011c4                set_gpio_callback
+                0x00000000000011b4      0x118 objs/drivers/gpio.o
+                0x00000000000011b4                set_gpio_callback
  .text.PIO_0_Handler
-                0x00000000000012dc       0x48 objs/drivers/gpio.o
-                0x00000000000012dc                PIO_0_Handler
+                0x00000000000012cc       0x48 objs/drivers/gpio.o
+                0x00000000000012cc                PIO_0_Handler
  .text.PIO_1_Handler
-                0x0000000000001324       0x48 objs/drivers/gpio.o
-                0x0000000000001324                PIO_1_Handler
+                0x0000000000001314       0x48 objs/drivers/gpio.o
+                0x0000000000001314                PIO_1_Handler
  .text.PIO_2_Handler
-                0x000000000000136c       0x48 objs/drivers/gpio.o
-                0x000000000000136c                PIO_2_Handler
+                0x000000000000135c       0x48 objs/drivers/gpio.o
+                0x000000000000135c                PIO_2_Handler
  .text.uart_clk_on
-                0x00000000000013b4       0xa8 objs/drivers/serial.o
+                0x00000000000013a4       0xa8 objs/drivers/serial.o
  .text.uart_check_tx
-                0x000000000000145c       0x38 objs/drivers/serial.o
+                0x000000000000144c       0x38 objs/drivers/serial.o
  .text.UART_Handler
-                0x0000000000001494       0x38 objs/drivers/serial.o
+                0x0000000000001484       0x38 objs/drivers/serial.o
  .text.UART_0_Handler
-                0x00000000000014cc       0x10 objs/drivers/serial.o
-                0x00000000000014cc                UART_0_Handler
+                0x00000000000014bc       0x10 objs/drivers/serial.o
+                0x00000000000014bc                UART_0_Handler
  .text.UART_1_Handler
-                0x00000000000014dc       0x10 objs/drivers/serial.o
-                0x00000000000014dc                UART_1_Handler
+                0x00000000000014cc       0x10 objs/drivers/serial.o
+                0x00000000000014cc                UART_1_Handler
  .text.serial_write
-                0x00000000000014ec       0xbc objs/drivers/serial.o
-                0x00000000000014ec                serial_write
+                0x00000000000014dc       0xbc objs/drivers/serial.o
+                0x00000000000014dc                serial_write
  .text.uart_clk_update
-                0x00000000000015a8       0x30 objs/drivers/serial.o
-                0x00000000000015a8                uart_clk_update
- .text.uart_on  0x00000000000015d8       0x74 objs/drivers/serial.o
-                0x00000000000015d8                uart_on
+                0x0000000000001598       0x30 objs/drivers/serial.o
+                0x0000000000001598                uart_clk_update
+ .text.uart_on  0x00000000000015c8       0x74 objs/drivers/serial.o
+                0x00000000000015c8                uart_on
  .text.RTC_Handler
-                0x000000000000164c       0x3c objs/drivers/rtc.o
-                0x000000000000164c                RTC_Handler
+                0x000000000000163c       0x3c objs/drivers/rtc.o
+                0x000000000000163c                RTC_Handler
  .text.TIMER_0_Handler
-                0x0000000000001688       0x18 objs/drivers/countertimers.o
-                0x0000000000001688                TIMER_0_Handler
+                0x0000000000001678       0x18 objs/drivers/countertimers.o
+                0x0000000000001678                TIMER_0_Handler
  .text.TIMER_1_Handler
-                0x00000000000016a0       0x18 objs/drivers/countertimers.o
-                0x00000000000016a0                TIMER_1_Handler
+                0x0000000000001690       0x18 objs/drivers/countertimers.o
+                0x0000000000001690                TIMER_1_Handler
  .text.TIMER_2_Handler
-                0x00000000000016b8       0x18 objs/drivers/countertimers.o
-                0x00000000000016b8                TIMER_2_Handler
+                0x00000000000016a8       0x18 objs/drivers/countertimers.o
+                0x00000000000016a8                TIMER_2_Handler
  .text.TIMER_3_Handler
-                0x00000000000016d0       0x18 objs/drivers/countertimers.o
-                0x00000000000016d0                TIMER_3_Handler
+                0x00000000000016c0       0x18 objs/drivers/countertimers.o
+                0x00000000000016c0                TIMER_3_Handler
  .text.I2C_0_Handler
-                0x00000000000016e8      0x188 objs/drivers/i2c.o
-                0x00000000000016e8                I2C_0_Handler
+                0x00000000000016d8      0x188 objs/drivers/i2c.o
+                0x00000000000016d8                I2C_0_Handler
  .text.i2c_read
-                0x0000000000001870       0x80 objs/drivers/i2c.o
-                0x0000000000001870                i2c_read
+                0x0000000000001860       0x80 objs/drivers/i2c.o
+                0x0000000000001860                i2c_read
  .text.i2c_write
-                0x00000000000018f0       0x6c objs/drivers/i2c.o
-                0x00000000000018f0                i2c_write
- .text.i2c_on   0x000000000000195c       0x48 objs/drivers/i2c.o
-                0x000000000000195c                i2c_on
+                0x00000000000018e0       0x6c objs/drivers/i2c.o
+                0x00000000000018e0                i2c_write
+ .text.i2c_on   0x000000000000194c       0x48 objs/drivers/i2c.o
+                0x000000000000194c                i2c_on
  .text.i2c_clock_update
-                0x00000000000019a4       0x2c objs/drivers/i2c.o
-                0x00000000000019a4                i2c_clock_update
+                0x0000000000001994       0x2c objs/drivers/i2c.o
+                0x0000000000001994                i2c_clock_update
  .text.ADC_Handler
-                0x00000000000019d0       0x1c objs/drivers/adc.o
-                0x00000000000019d0                ADC_Handler
+                0x00000000000019c0       0x1c objs/drivers/adc.o
+                0x00000000000019c0                ADC_Handler
  .text.adc_clk_update
-                0x00000000000019ec       0x24 objs/drivers/adc.o
-                0x00000000000019ec                adc_clk_update
- .text.uprintf  0x0000000000001a10       0x30 objs/lib/uprintf.o
-                0x0000000000001a10                uprintf
- .text.memcpy   0x0000000000001a40       0x44 objs/lib/string.o
-                0x0000000000001a40                memcpy
- .text.convert  0x0000000000001a84      0x16c objs/lib/vsprintf.o
+                0x00000000000019dc       0x24 objs/drivers/adc.o
+                0x00000000000019dc                adc_clk_update
+ .text.uprintf  0x0000000000001a00       0x30 objs/lib/uprintf.o
+                0x0000000000001a00                uprintf
+ .text.memcpy   0x0000000000001a30       0x44 objs/lib/string.o
+                0x0000000000001a30                memcpy
+ .text.convert  0x0000000000001a74      0x16c objs/lib/vsprintf.o
  .text.vsnprintf
-                0x0000000000001bf0      0x184 objs/lib/vsprintf.o
-                0x0000000000001bf0                vsnprintf
+                0x0000000000001be0      0x184 objs/lib/vsprintf.o
+                0x0000000000001be0                vsnprintf
  .text.rf_rx_calback
-                0x0000000000001d74        0xc objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001d74                rf_rx_calback
+                0x0000000000001d64        0xc objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001d64                rf_rx_calback
  .text.handle_uart_cmd
-                0x0000000000001d80       0x34 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001d80                handle_uart_cmd
+                0x0000000000001d70       0x34 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001d70                handle_uart_cmd
  .text.periodic_display
-                0x0000000000001db4        0xc objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001db4                periodic_display
+                0x0000000000001da4        0xc objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001da4                periodic_display
  .text.activate_chenillard
-                0x0000000000001dc0       0x40 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001dc0                activate_chenillard
+                0x0000000000001db0       0x40 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001db0                activate_chenillard
  .text.fault_info
-                0x0000000000001e00        0xc objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001e00                fault_info
+                0x0000000000001df0        0xc objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001df0                fault_info
  .text.rf_config
-                0x0000000000001e0c       0x58 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001e0c                rf_config
+                0x0000000000001dfc       0x58 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001dfc                rf_config
+ .text.handle_rf_rx_data
+                0x0000000000001e54       0xc0 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001e54                handle_rf_rx_data
  .text.lux_config
-                0x0000000000001e64       0x24 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001e64                lux_config
+                0x0000000000001f14       0x24 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001f14                lux_config
  .text.bme_config
-                0x0000000000001e88       0x24 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001e88                bme_config
+                0x0000000000001f38       0x24 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001f38                bme_config
  .text.uv_config
-                0x0000000000001eac       0x24 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001eac                uv_config
- .text.send_on_rf
-                0x0000000000001ed0       0xa4 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001ed0                send_on_rf
+                0x0000000000001f5c       0x24 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001f5c                uv_config
  .text.startup.main
-                0x0000000000001f74      0x1b0 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000001f74                main
+                0x0000000000001f80      0x1a8 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000001f80                main
  *(SORT(.rodata*))
  .rodata.__FUNCTION__.3723
-                0x0000000000002124        0xc objs/core/fault_handlers.o
+                0x0000000000002128        0xc objs/core/fault_handlers.o
  .rodata.__FUNCTION__.3731
-                0x0000000000002130        0xc objs/core/fault_handlers.o
+                0x0000000000002134        0xc objs/core/fault_handlers.o
  .rodata.__FUNCTION__.3727
-                0x000000000000213c       0x12 objs/core/fault_handlers.o
- *fill*         0x000000000000214e        0x2 ff
+                0x0000000000002140       0x12 objs/core/fault_handlers.o
+ *fill*         0x0000000000002152        0x2 ff
  .rodata.__FUNCTION__.3735
-                0x0000000000002150        0xf objs/core/fault_handlers.o
- *fill*         0x000000000000215f        0x1 ff
+                0x0000000000002154        0xf objs/core/fault_handlers.o
+ *fill*         0x0000000000002163        0x1 ff
  .rodata.pio_regs_handles_port0
-                0x0000000000002160       0x80 objs/core/pio.o
+                0x0000000000002164       0x80 objs/core/pio.o
  .rodata.pio_regs_handles_port1
-                0x00000000000021e0       0x1c objs/core/pio.o
+                0x00000000000021e4       0x1c objs/core/pio.o
  .rodata.pio_regs_handles_port2
-                0x00000000000021fc       0x40 objs/core/pio.o
+                0x0000000000002200       0x40 objs/core/pio.o
  .rodata.status_led
-                0x000000000000223c       0x2c objs/extdrv/status_led.o
- .rodata.steps  0x0000000000002268        0xb objs/extdrv/status_led.o
- *fill*         0x0000000000002273        0x1 ff
+                0x0000000000002240       0x2c objs/extdrv/status_led.o
+ .rodata.steps  0x000000000000226c        0xb objs/extdrv/status_led.o
+ *fill*         0x0000000000002277        0x1 ff
  .rodata.rf_init_settings
-                0x0000000000002274       0x48 objs/extdrv/cc1101.o
+                0x0000000000002278       0x48 objs/extdrv/cc1101.o
  .rodata.set_gpio_callback
-                0x00000000000022bc       0x14 objs/drivers/gpio.o
+                0x00000000000022c0       0x14 objs/drivers/gpio.o
  .rodata.uart_defs
-                0x00000000000022d0       0x10 objs/drivers/serial.o
+                0x00000000000022d4       0x10 objs/drivers/serial.o
  .rodata.I2C_0_Handler
-                0x00000000000022e0      0x164 objs/drivers/i2c.o
+                0x00000000000022e4      0x164 objs/drivers/i2c.o
  .rodata.CSWTCH.3
-                0x0000000000002444       0x18 objs/drivers/i2c.o
+                0x0000000000002448       0x18 objs/drivers/i2c.o
  .rodata.vsnprintf
-                0x000000000000245c       0xc8 objs/lib/vsprintf.o
+                0x0000000000002460       0xc8 objs/lib/vsprintf.o
  .rodata.digits.3755
-                0x0000000000002524       0x10 objs/lib/vsprintf.o
+                0x0000000000002528       0x10 objs/lib/vsprintf.o
  .rodata.button
-                0x0000000000002534        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000002534                button
- *fill*         0x0000000000002537        0x1 ff
- .rodata.status_led_red
                 0x0000000000002538        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000002538                status_led_red
+                0x0000000000002538                button
  *fill*         0x000000000000253b        0x1 ff
- .rodata.cc1101_gdo0
+ .rodata.status_led_red
                 0x000000000000253c        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x000000000000253c                cc1101_gdo0
+                0x000000000000253c                status_led_red
  *fill*         0x000000000000253f        0x1 ff
+ .rodata.cc1101_gdo0
+                0x0000000000002540        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000002540                cc1101_gdo0
+ *fill*         0x0000000000002543        0x1 ff
  .rodata.common_pins
-                0x0000000000002540       0x40 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000002540                common_pins
+                0x0000000000002544       0x40 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000002544                common_pins
  .rodata.cc1101_miso_pin
-                0x0000000000002580        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000002580                cc1101_miso_pin
- *fill*         0x0000000000002583        0x1 ff
- .rodata.cc1101_cs_pin
                 0x0000000000002584        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000000002584                cc1101_cs_pin
+                0x0000000000002584                cc1101_miso_pin
  *fill*         0x0000000000002587        0x1 ff
+ .rodata.cc1101_cs_pin
+                0x0000000000002588        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000000002588                cc1101_cs_pin
+ *fill*         0x000000000000258b        0x1 ff
  .rodata.str1.4
-                0x0000000000002588      0x224 objs/apps/rf_sub1G/rf_data_receive/main.o
-                                        0x222 (size before relaxing)
+                0x000000000000258c      0x210 objs/apps/rf_sub1G/rf_data_receive/main.o
+                                        0x20e (size before relaxing)
  .rodata.status_led_green
-                0x00000000000027ac        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x00000000000027ac                status_led_green
+                0x000000000000279c        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x000000000000279c                status_led_green
  *(SORT(.got*))
-                0x00000000000027b0                . = ALIGN (0x4)
- *fill*         0x00000000000027af        0x1 ff
-                0x00000000000027b0                _end_text = .
+                0x00000000000027a0                . = ALIGN (0x4)
+ *fill*         0x000000000000279f        0x1 ff
+                0x00000000000027a0                _end_text = .
 
-.glue_7         0x00000000000027b0        0x0
- .glue_7        0x00000000000027b0        0x0 linker stubs
+.glue_7         0x00000000000027a0        0x0
+ .glue_7        0x00000000000027a0        0x0 linker stubs
 
-.glue_7t        0x00000000000027b0        0x0
- .glue_7t       0x00000000000027b0        0x0 linker stubs
+.glue_7t        0x00000000000027a0        0x0
+ .glue_7t       0x00000000000027a0        0x0 linker stubs
 
-.vfp11_veneer   0x00000000000027b0        0x0
- .vfp11_veneer  0x00000000000027b0        0x0 linker stubs
+.vfp11_veneer   0x00000000000027a0        0x0
+ .vfp11_veneer  0x00000000000027a0        0x0 linker stubs
 
-.v4_bx          0x00000000000027b0        0x0
- .v4_bx         0x00000000000027b0        0x0 linker stubs
+.v4_bx          0x00000000000027a0        0x0
+ .v4_bx         0x00000000000027a0        0x0 linker stubs
 
-.iplt           0x00000000000027b0        0x0
- .iplt          0x00000000000027b0        0x0 objs/core/watchdog.o
+.iplt           0x00000000000027a0        0x0
+ .iplt          0x00000000000027a0        0x0 objs/core/watchdog.o
 
-.rel.dyn        0x00000000000027b0        0x0
- .rel.iplt      0x00000000000027b0        0x0 objs/core/watchdog.o
-                0x00000000000027b0                . = ALIGN (0x4)
+.rel.dyn        0x00000000000027a0        0x0
+ .rel.iplt      0x00000000000027a0        0x0 objs/core/watchdog.o
+                0x00000000000027a0                . = ALIGN (0x4)
 
-.data           0x0000000010000000      0x208 load address 0x00000000000027b0
+.data           0x0000000010000000      0x204 load address 0x00000000000027a0
                 0x0000000010000000                _start_data = .
  *(SORT(.data*))
  .data.lpc_private
@@ -1297,82 +1297,78 @@ LOAD objs/apps/rf_sub1G/rf_data_receive/main.o
  .data.veml6070_sensor
                 0x00000000100001f8        0x4 objs/apps/rf_sub1G/rf_data_receive/main.o
                 0x00000000100001f8                veml6070_sensor
- .data.displayOrder
-                0x00000000100001fc        0x3 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x00000000100001fc                displayOrder
- *fill*         0x00000000100001ff        0x1 
  .data.tsl256x_sensor
-                0x0000000010000200        0x6 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000010000200                tsl256x_sensor
+                0x00000000100001fc        0x6 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x00000000100001fc                tsl256x_sensor
  .data.chenillard_active
-                0x0000000010000206        0x1 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000010000206                chenillard_active
+                0x0000000010000202        0x1 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000010000202                chenillard_active
  .data.chenillard_activation_request
-                0x0000000010000207        0x1 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000010000207                chenillard_activation_request
-                0x0000000010000208                _end_data = .
+                0x0000000010000203        0x1 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000010000203                chenillard_activation_request
+                0x0000000010000204                _end_data = .
 
-.igot.plt       0x0000000010000208        0x0 load address 0x00000000000029b8
- .igot.plt      0x0000000010000208        0x0 objs/core/watchdog.o
-                0x0000000010000208                . = ALIGN (0x4)
+.igot.plt       0x0000000010000204        0x0 load address 0x00000000000029a4
+ .igot.plt      0x0000000010000204        0x0 objs/core/watchdog.o
+                0x0000000010000204                . = ALIGN (0x4)
 
-.bss            0x0000000010000208      0x290 load address 0x00000000000029b8
-                0x0000000010000208                _start_bss = .
+.bss            0x0000000010000204      0x290 load address 0x00000000000029a4
+                0x0000000010000204                _start_bss = .
  *(SORT(.bss*))
  .bss.wdt_callback
-                0x0000000010000208        0x4 objs/core/watchdog.o
+                0x0000000010000204        0x4 objs/core/watchdog.o
  .bss.rom_div_helpers
-                0x000000001000020c        0x4 objs/core/rom_helpers.o
+                0x0000000010000208        0x4 objs/core/rom_helpers.o
  .bss.global_wrapping_system_clock_cycles
-                0x0000000010000210        0x4 objs/core/systick.o
- .bss.tick_ms   0x0000000010000214        0x4 objs/core/systick.o
+                0x000000001000020c        0x4 objs/core/systick.o
+ .bss.tick_ms   0x0000000010000210        0x4 objs/core/systick.o
  .bss.tick_reload
-                0x0000000010000218        0x4 objs/core/systick.o
+                0x0000000010000214        0x4 objs/core/systick.o
  .bss.usleep_us_count
-                0x000000001000021c        0x4 objs/core/systick.o
+                0x0000000010000218        0x4 objs/core/systick.o
  .bss.sleep_count
-                0x0000000010000220        0x4 objs/core/systick.o
+                0x000000001000021c        0x4 objs/core/systick.o
  .bss.global_wrapping_system_ticks
-                0x0000000010000224        0x4 objs/core/systick.o
+                0x0000000010000220        0x4 objs/core/systick.o
  .bss.systick_running
-                0x0000000010000228        0x4 objs/core/systick.o
- .bss.cbs       0x000000001000022c       0x20 objs/core/systick.o
- .bss.n.4150    0x000000001000024c        0x4 objs/extdrv/status_led.o
- .bss.cc1101    0x0000000010000250        0x9 objs/extdrv/cc1101.o
- *fill*         0x0000000010000259        0x3 
+                0x0000000010000224        0x4 objs/core/systick.o
+ .bss.cbs       0x0000000010000228       0x20 objs/core/systick.o
+ .bss.n.4150    0x0000000010000248        0x4 objs/extdrv/status_led.o
+ .bss.cc1101    0x000000001000024c        0x9 objs/extdrv/cc1101.o
+ *fill*         0x0000000010000255        0x3 
  .bss.gpio_callbacks_port0
-                0x000000001000025c       0x80 objs/drivers/gpio.o
+                0x0000000010000258       0x80 objs/drivers/gpio.o
  .bss.gpio_callbacks_port1
-                0x00000000100002dc       0x1c objs/drivers/gpio.o
+                0x00000000100002d8       0x1c objs/drivers/gpio.o
  .bss.gpio_callbacks_port2
-                0x00000000100002f8       0x40 objs/drivers/gpio.o
+                0x00000000100002f4       0x40 objs/drivers/gpio.o
  .bss.rtc_callback
-                0x0000000010000338        0x4 objs/drivers/rtc.o
+                0x0000000010000334        0x4 objs/drivers/rtc.o
  .bss.rtc_match_period
-                0x000000001000033c        0x4 objs/drivers/rtc.o
+                0x0000000010000338        0x4 objs/drivers/rtc.o
  .bss.adc_int_callback
-                0x0000000010000340        0x4 objs/drivers/adc.o
-                0x0000000010000340                adc_int_callback
+                0x000000001000033c        0x4 objs/drivers/adc.o
+                0x000000001000033c                adc_int_callback
  .bss.update_display
-                0x0000000010000344        0x4 objs/apps/rf_sub1G/rf_data_receive/main.o
- .bss.cc_tx     0x0000000010000348        0x4 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000010000340        0x4 objs/apps/rf_sub1G/rf_data_receive/main.o
+ .bss.cc_tx     0x0000000010000344        0x4 objs/apps/rf_sub1G/rf_data_receive/main.o
  .bss.cc_tx_buff
-                0x000000001000034c       0x40 objs/apps/rf_sub1G/rf_data_receive/main.o
- .bss.check_rx  0x000000001000038c        0x4 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000010000348       0x40 objs/apps/rf_sub1G/rf_data_receive/main.o
+ .bss.check_rx  0x0000000010000388        0x4 objs/apps/rf_sub1G/rf_data_receive/main.o
  .bss.periodic_match
-                0x0000000010000390        0x1 objs/drivers/rtc.o
- .bss.cc_ptr    0x0000000010000391        0x1 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x000000001000038c        0x1 objs/drivers/rtc.o
+ .bss.cc_ptr    0x000000001000038d        0x1 objs/apps/rf_sub1G/rf_data_receive/main.o
  .bss.loop.4742
-                0x0000000010000392        0x1 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x000000001000038e        0x1 objs/apps/rf_sub1G/rf_data_receive/main.o
  *(SORT(COMMON))
- *fill*         0x0000000010000393        0x1 
- COMMON         0x0000000010000394        0x4 objs/core/rom_helpers.o
-                0x0000000010000394                iap_entry
- COMMON         0x0000000010000398      0x100 objs/apps/rf_sub1G/rf_data_receive/main.o
-                0x0000000010000398                crcTable
-                0x0000000010000498                _end_bss = .
-                0x0000000010000498                . = ALIGN (0x4)
-                0x0000000010000498                _end = .
+ *fill*         0x000000001000038f        0x1 
+ COMMON         0x0000000010000390        0x4 objs/core/rom_helpers.o
+                0x0000000010000390                iap_entry
+ COMMON         0x0000000010000394      0x100 objs/apps/rf_sub1G/rf_data_receive/main.o
+                0x0000000010000394                crcTable
+                0x0000000010000494                _end_bss = .
+                0x0000000010000494                . = ALIGN (0x4)
+                0x0000000010000494                _end = .
                 [!provide]                        PROVIDE (end, .)
 OUTPUT(apps/rf_sub1G/rf_data_receive/rf_data_receive.elf elf32-littlearm)
 

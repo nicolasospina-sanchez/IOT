@@ -174,10 +174,12 @@ void handle_rf_rx_data(void)
 	memcpy(&datas, &data[4], sizeof(message));
 #ifdef DEBUG
 	uprintf(UART0, "RF: ret:%d, st: %d.\n\r", ret, status);
-    uprintf(UART0, "RF: data lenght: %d.\n\r", data[0]);
-    uprintf(UART0, "RF: destination: %x.\n\r", data[1]);
-    uprintf(UART0, "RF: message in memory is not visible: %c.\n\r", data[2]);
-    uprintf(UART0, "Display Order: %s.\n\r", data[4]);
+    // uprintf(UART0, "RF: data lenght: %d.\n\r", data[0]);
+    // uprintf(UART0, "RF: destination: %x.\n\r", data[1]);
+    // uprintf(UART0, "RF: message in memory is not visible: %c.\n\r", data[2]);
+    uprintf(UART0, "Lux: %d.\n\r", datas.lum);
+	uprintf(UART0, "Hum: %d,%d rH.\n\r", datas.hum/10, datas.hum%10);
+	uprintf(UART0, "Temp: %d,%d\n\r", datas.temp/10, datas.temp%10);
 #endif
 
 	switch (data[2]) {
@@ -472,7 +474,7 @@ int main(void)
 			cc_tx_msg.lum=lux;
 			update_display = 0;*/
 
-			 send_on_rf();
+			//  send_on_rf();
 
 		}
 
@@ -498,7 +500,7 @@ int main(void)
 		}
 		if (check_rx == 1) {
 			check_rx = 0;
-			// handle_rf_rx_data();
+			handle_rf_rx_data();
 		}
 
 		// if(cc_ptr == 3){
